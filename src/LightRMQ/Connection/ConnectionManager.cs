@@ -6,7 +6,7 @@ using RabbitMQ.Client;
 
 namespace LightRMQ.Connection;
 
-internal class ConnectionManager(RabbitMqConfiguration configuration, ILogger<ConnectionManager> logger) : 
+internal class ConnectionManager(RabbitMqConfiguration configuration, ILogger<ConnectionManager> logger) :
     IConnectionManager,
     IAsyncDisposable
 {
@@ -16,6 +16,19 @@ internal class ConnectionManager(RabbitMqConfiguration configuration, ILogger<Co
     private readonly AsyncLocker _locker = new();
 
     public async Task<IConnection> GetOrCreateConnectionAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await GetOrCreateConnectionProccessAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating RabbitMQ connection");
+            throw;
+        }
+    }
+
+    private async Task<IConnection> GetOrCreateConnectionProccessAsync(CancellationToken cancellationToken)
     {
         using (await _locker.LockAsync(cancellationToken: cancellationToken))
         {

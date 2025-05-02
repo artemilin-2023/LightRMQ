@@ -15,7 +15,7 @@ internal class TopologyManager(RabbitMqConfiguration configuration, ILogger<Topo
 
     public async Task EnsureTopologyAsync(CancellationToken cancellationToken)
     {
-        var channel = await _channelPool.GetProducerChannelAsync(cancellationToken);
+        var channel = await _channelPool.AcquireProducerChannelAsync(cancellationToken);
 
         try
         {

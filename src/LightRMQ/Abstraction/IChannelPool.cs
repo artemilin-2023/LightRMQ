@@ -4,7 +4,7 @@ namespace LightRMQ.Abstraction;
 
 internal interface IChannelPool
 {
-    Task<IChannel> GetProducerChannelAsync(CancellationToken cancellationToken);
+    Task<IChannel> AcquireProducerChannelAsync(CancellationToken cancellationToken);
     Task<IChannel> GetConsumerChannelAsync(CancellationToken cancellationToken);
-    Task ReturnChannelAsync(IChannel channel);
+    Task ReturnProducerChannelAsync(IChannel channel);
 }

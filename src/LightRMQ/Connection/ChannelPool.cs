@@ -6,7 +6,7 @@ using System.Collections.Concurrent;
 
 namespace LightRMQ.Connection;
 
-internal class ChannelPool: 
+internal class ChannelPool :
     IChannelPool,
     IAsyncDisposable
 {
@@ -50,11 +50,11 @@ internal class ChannelPool:
         }
     }
 
-    public async Task<IChannel> GetProducerChannelAsync(CancellationToken cancellationToken)
+    public async Task<IChannel> AcquireProducerChannelAsync(CancellationToken cancellationToken)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        if (_producerChannels.TryTake(out var channel) && ChannelIsValid(channel))
+        if (_producerChannels.TryTake(out var channel) && IsChannelValid(channel))
         {
             _logger.LogDebug("Reusing existing producer channel.");
             return channel;
@@ -67,7 +67,7 @@ internal class ChannelPool:
         return newChannel;
     }
 
-    private static bool ChannelIsValid(IChannel channel)
+    private static bool IsChannelValid(IChannel channel)
         => channel is not null && channel.IsOpen;
 
     private async Task SafeCloseChannelAsync(IChannel? channel, CancellationToken cancellationToken)
@@ -91,14 +91,14 @@ internal class ChannelPool:
         }
     }
 
-    public async Task ReturnChannelAsync(IChannel channel)
+    public async Task ReturnProducerChannelAsync(IChannel channel)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        
+
         if (channel.IsClosed)
         {
             _logger.LogWarning("Channel is not open. Disposing it.");
-            await channel.DisposeAsync();
+            await SafeCloseChannelAsync(channel, CancellationToken.None);
             return;
         }
 
@@ -109,16 +109,27 @@ internal class ChannelPool:
     public async Task CleanupUnusedChannelsAsync(CancellationToken cancellationToken)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+
+        int counter = 0;
         using (await _locker.LockAsync(cancellationToken: cancellationToken))
         {
             foreach (var channel in _producerChannels)
             {
-                if (!ChannelIsValid(channel))
+                if (!IsChannelValid(channel))
                 {
                     await SafeCloseChannelAsync(channel, cancellationToken);
+                    counter++;
                 }
             }
         }
+
+        if (counter > 0)
+        {
+            _logger.LogInformation("Cleaned up {Count} unused channels.", counter);
+            return;
+        }
+
+        _logger.LogDebug("All channels are in use. Nothing to clean up.");
     }
 
     public async ValueTask DisposeAsync()

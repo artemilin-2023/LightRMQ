@@ -1,6 +1,4 @@
-﻿using RabbitMQ.Client;
-
-namespace LightRMQ.Configuration;
+﻿namespace LightRMQ.Configuration;
 
 internal record RabbitMqConfiguration
 {

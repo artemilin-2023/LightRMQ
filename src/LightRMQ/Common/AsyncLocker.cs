@@ -26,9 +26,9 @@ public sealed class AsyncLocker : IAsyncDisposable
 
         if (timeout.HasValue)
             await _semaphore.WaitAsync(timeout.Value, cancellationToken).ConfigureAwait(false);
-        
+
         await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        
+
         return new Releaser(this);
     }
 
