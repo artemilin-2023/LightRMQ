@@ -1,4 +1,4 @@
-﻿namespace LightRMQ.Configuration;
+﻿namespace LightRMQ.Configuration.Models;
 
 public class ConsumerRegistration
 {

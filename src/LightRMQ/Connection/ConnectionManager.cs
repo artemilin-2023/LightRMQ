@@ -1,6 +1,6 @@
 ﻿using LightRMQ.Abstraction;
 using LightRMQ.Common;
-using LightRMQ.Configuration;
+using LightRMQ.Configuration.Models;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 

@@ -1,6 +1,6 @@
 ﻿using LightRMQ.Abstraction;
 
-namespace LightRMQ.Configuration;
+namespace LightRMQ.Configuration.Models;
 
 public class SerializerRegistration
 {

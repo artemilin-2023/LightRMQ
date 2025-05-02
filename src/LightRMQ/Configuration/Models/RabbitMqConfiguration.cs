@@ -1,4 +1,4 @@
-﻿namespace LightRMQ.Configuration;
+﻿namespace LightRMQ.Configuration.Models;
 
 internal record RabbitMqConfiguration
 {

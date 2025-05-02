@@ -1,5 +1,5 @@
 ﻿using LightRMQ.Abstraction;
-using LightRMQ.Configuration;
+using LightRMQ.Configuration.Models;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
@@ -34,7 +34,7 @@ internal class TopologyManager(RabbitMqConfiguration configuration, ILogger<Topo
 
     private async Task ApplyQueueDefenitionsAsync(IChannel channel, CancellationToken cancellationToken)
     {
-        foreach (var defenition in _configuration.Options.Queues.Values)
+        foreach (var defenition in _configuration.Options.Topology.Queues.Values)
         {
             var queueName = defenition.Name;
             var durable = defenition.Durable;
@@ -51,7 +51,7 @@ internal class TopologyManager(RabbitMqConfiguration configuration, ILogger<Topo
 
     private async Task ApplyExchaneDefenitionsAsync(IChannel channel, CancellationToken cancellationToken)
     {
-        foreach (var defenition in _configuration.Options.Exchanges.Values)
+        foreach (var defenition in _configuration.Options.Topology.Exchanges.Values)
         {
             var exchangeName = defenition.Name;
             var type = defenition.Type;
@@ -68,7 +68,7 @@ internal class TopologyManager(RabbitMqConfiguration configuration, ILogger<Topo
 
     private async Task BindQueuesAsync(IChannel channel, CancellationToken cancellationToken)
     {
-        foreach (var defenition in _configuration.Options.Bindings)
+        foreach (var defenition in _configuration.Options.Topology.Bindings)
         {
             var exchangeName = defenition.QueueName;
             var queueName = defenition.QueueName;
