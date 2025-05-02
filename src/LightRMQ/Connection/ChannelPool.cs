@@ -1,36 +1,141 @@
 ﻿using LightRMQ.Abstraction;
+using LightRMQ.Common;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using System.Collections.Concurrent;
 
 namespace LightRMQ.Connection;
 
-internal class ChannelPool(ConnectionManager connectionManager, ILogger<ChannelPool> logger) : 
+internal class ChannelPool: 
     IChannelPool,
     IAsyncDisposable
 {
-    private readonly ConnectionManager _connectionManager = connectionManager;
-    private readonly ILogger<ChannelPool> _logger = logger;
+    private const int PoolInitializeSize = 5;
+
+    private readonly ConnectionManager _connectionManager;
+    private readonly ILogger<ChannelPool> _logger;
     private readonly ConcurrentBag<IChannel> _producerChannels = [];
-    private readonly ThreadLocal<IChannel> _consumerChannel = new();
+    private readonly ThreadLocal<IChannel> _consumerChannel = new(trackAllValues: true);
+    private readonly AsyncLocker _locker = new();
+    private bool _disposed = false;
 
-    public Task<IChannel> GetConsumerChannelAsync(CancellationToken cancellationToken)
+    public ChannelPool(ConnectionManager connectionManager, ILogger<ChannelPool> logger)
     {
-        throw new NotImplementedException();
+        _connectionManager = connectionManager;
+        _logger = logger;
+
+        for (var i = 0; i < PoolInitializeSize; i++)
+        {
+            _producerChannels.Add(CreateChannelAsync(CancellationToken.None).GetAwaiter().GetResult());
+        }
     }
 
-    public Task<IChannel> GetProducerChannelAsync(CancellationToken cancellationToken)
+    public async Task<IChannel> GetConsumerChannelAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        _consumerChannel.Value ??= await CreateChannelAsync(cancellationToken);
+        return _consumerChannel.Value;
     }
 
-    public void ReturnChannel(IChannel channel)
+    private async Task<IChannel> CreateChannelAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        using (await _locker.LockAsync(cancellationToken: cancellationToken))
+        {
+            var connection = await _connectionManager.GetOrCreateConnectionAsync(cancellationToken);
+            var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
+
+            _logger.LogInformation("New RabbitMQ channel opened successfully.");
+
+            return channel;
+        }
+    }
+
+    public async Task<IChannel> GetProducerChannelAsync(CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        if (_producerChannels.TryTake(out var channel) && ChannelIsValid(channel))
+        {
+            _logger.LogDebug("Reusing existing producer channel.");
+            return channel;
+        }
+
+        await SafeCloseChannelAsync(channel, cancellationToken);
+
+        _logger.LogDebug("Creating new producer channel.");
+        var newChannel = await CreateChannelAsync(cancellationToken);
+        return newChannel;
+    }
+
+    private static bool ChannelIsValid(IChannel channel)
+        => channel is not null && channel.IsOpen;
+
+    private async Task SafeCloseChannelAsync(IChannel? channel, CancellationToken cancellationToken)
+    {
+        if (channel is null) return;
+
+        try
+        {
+            if (channel.IsOpen)
+            {
+                await channel.CloseAsync(cancellationToken: cancellationToken);
+                _logger.LogDebug("Channel closed successfully.");
+            }
+
+            await channel.DisposeAsync();
+            _logger.LogInformation("Channel disposed successfully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error while closing channel: {Message}", ex.Message);
+        }
+    }
+
+    public async Task ReturnChannelAsync(IChannel channel)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        
+        if (channel.IsClosed)
+        {
+            _logger.LogWarning("Channel is not open. Disposing it.");
+            await channel.DisposeAsync();
+            return;
+        }
+
+        _producerChannels.Add(channel);
+        _logger.LogDebug("Returned channel to pool.");
+    }
+
+    public async Task CleanupUnusedChannelsAsync(CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        using (await _locker.LockAsync(cancellationToken: cancellationToken))
+        {
+            foreach (var channel in _producerChannels)
+            {
+                if (!ChannelIsValid(channel))
+                {
+                    await SafeCloseChannelAsync(channel, cancellationToken);
+                }
+            }
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
-        await _connectionManager.DisposeAsync();
+        using (await _locker.LockAsync())
+        {
+
+            await _connectionManager.DisposeAsync();
+            foreach (var channel in _producerChannels)
+            {
+                await SafeCloseChannelAsync(channel, CancellationToken.None);
+            }
+
+            _consumerChannel.Dispose();
+        }
+
+        await _locker.DisposeAsync();
+        _disposed = true;
     }
 }

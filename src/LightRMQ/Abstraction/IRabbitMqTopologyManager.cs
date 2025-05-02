@@ -1,6 +1,4 @@
-﻿using RabbitMQ.Client;
-
-namespace LightRMQ.Abstraction;
+﻿namespace LightRMQ.Abstraction;
 
 public interface IRabbitMqTopologyManager
 {
