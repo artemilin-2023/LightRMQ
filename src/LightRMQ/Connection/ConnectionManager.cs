@@ -1,0 +1,49 @@
+﻿using LightRMQ.Abstraction;
+using LightRMQ.Common;
+using LightRMQ.Configuration;
+using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
+
+namespace LightRMQ.Connection;
+
+internal class ConnectionManager(RabbitMqConfiguration configuration, ILogger<ConnectionManager> logger) : 
+    IConnectionManager,
+    IAsyncDisposable
+{
+    private readonly RabbitMqConfiguration _configuration = configuration;
+    private readonly ILogger<ConnectionManager> _logger = logger;
+    private IConnection? _connection;
+    private readonly AsyncLocker _locker = new();
+
+    public async Task<IConnection> GetOrCreateConnectionAsync(CancellationToken cancellationToken)
+    {
+        using (await _locker.LockAsync(cancellationToken: cancellationToken))
+        {
+            if (_connection?.IsOpen ?? false)
+                return _connection;
+
+            _logger.LogInformation("Creating new RabbitMQ connection...");
+
+            var factory = new ConnectionFactory
+            {
+                Uri = new Uri(_configuration.Options.ConnectionString),
+                ClientProvidedName = _configuration.Options.ClientName,
+                AutomaticRecoveryEnabled = _configuration.Options.AutomaticRecovery,
+                RequestedHeartbeat = _configuration.Options.Heartbeat
+            };
+
+            var connection = await factory.CreateConnectionAsync(cancellationToken);
+            _connection = connection;
+
+            _logger.LogInformation("RabbitMQ connection created.");
+
+            return connection;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_connection is not null)
+            await _connection.DisposeAsync().AsTask();
+    }
+}

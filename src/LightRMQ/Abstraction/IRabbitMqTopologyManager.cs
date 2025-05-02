@@ -2,8 +2,7 @@
 
 namespace LightRMQ.Abstraction;
 
-public interface IRabbitMqConnection
+public interface IRabbitMqTopologyManager
 {
-    Task<IChannel> GetChannelAsync(CancellationToken cancellationToken);
     Task EnsureTopologyAsync(CancellationToken cancellationToken);
 }
