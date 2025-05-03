@@ -1,4 +1,4 @@
-﻿using LightRMQ.Abstraction;
+﻿using LightRMQ.Abstractions;
 
 namespace LightRMQ.Configuration.Models;
 

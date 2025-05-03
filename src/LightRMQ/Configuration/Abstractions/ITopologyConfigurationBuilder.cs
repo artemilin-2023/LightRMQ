@@ -1,6 +1,6 @@
 ﻿using LightRMQ.Configuration.Models;
 
-namespace LightRMQ.Configuration.Abstraction;
+namespace LightRMQ.Configuration.Abstractions;
 
 public interface ITopologyConfigurationBuilder
 {

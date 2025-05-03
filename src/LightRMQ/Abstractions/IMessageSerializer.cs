@@ -1,4 +1,4 @@
-﻿namespace LightRMQ.Abstraction;
+﻿namespace LightRMQ.Abstractions;
 
 public interface IMessageSerializer
 {

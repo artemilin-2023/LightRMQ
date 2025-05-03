@@ -1,17 +1,19 @@
-﻿using LightRMQ.Abstraction;
+﻿using LightRMQ.Abstractions;
 using LightRMQ.Configuration.Models;
+using LightRMQ.Connection;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
-namespace LightRMQ.Connection;
+namespace LightRMQ.Configuration;
 
-internal class TopologyManager(RabbitMqConfiguration configuration, ILogger<TopologyManager> logger, ChannelPool channelPool) :
+internal class TopologyManager(LightRmqConfiguration configuration, ILogger<TopologyManager> logger, ChannelPool channelPool) :
     IRabbitMqTopologyManager,
     IAsyncDisposable
 {
-    private readonly RabbitMqConfiguration _configuration = configuration;
+    private readonly LightRmqConfiguration _configuration = configuration;
     private readonly ILogger<TopologyManager> _logger = logger;
     private readonly ChannelPool _channelPool = channelPool;
+    private bool _disposed = false;
 
     public async Task EnsureTopologyAsync(CancellationToken cancellationToken)
     {
@@ -30,6 +32,10 @@ internal class TopologyManager(RabbitMqConfiguration configuration, ILogger<Topo
         {
             _logger.LogError(ex, "Error ensuring topology");
         }
+        finally
+        {
+            await _channelPool.ReturnProducerChannelAsync(channel);
+        }
     }
 
     private async Task ApplyQueueDefenitionsAsync(IChannel channel, CancellationToken cancellationToken)
@@ -42,10 +48,10 @@ internal class TopologyManager(RabbitMqConfiguration configuration, ILogger<Topo
             var autoDelete = defenition.AutoDelete;
             var args = defenition.Arguments;
 
-            _logger.LogInformation("Declaring queue {QueueName} with durable={Durable}, exclusive={Exclusive}, autoDelete={AutoDelete}",
-                queueName, durable, exclusive, autoDelete);
-
             await channel.QueueDeclareAsync(queueName, durable, exclusive, autoDelete, arguments: args, cancellationToken: cancellationToken);
+            
+            _logger.LogInformation("Successfully declared queue '{QueueName}' with durable={Durable}, exclusive={Exclusive}, autoDelete={AutoDelete}.",
+               queueName, durable, exclusive, autoDelete);
         }
     }
 
@@ -59,10 +65,10 @@ internal class TopologyManager(RabbitMqConfiguration configuration, ILogger<Topo
             var autoDelete = defenition.AutoDelete;
             var args = defenition.Arguments;
 
-            _logger.LogInformation("Declaring exchange {ExchangeName} with type={Type}, durable={Durable}, autoDelete={AutoDelete}",
-                exchangeName, type, durable, autoDelete);
-
             await channel.ExchangeDeclareAsync(exchangeName, type, durable, autoDelete, arguments: args, cancellationToken: cancellationToken);
+
+            _logger.LogInformation("Successfully declared exchange {ExchangeName} with type={Type}, durable={Durable}, autoDelete={AutoDelete}",
+                exchangeName, type, durable, autoDelete);
         }
     }
 
@@ -70,20 +76,24 @@ internal class TopologyManager(RabbitMqConfiguration configuration, ILogger<Topo
     {
         foreach (var defenition in _configuration.Options.Topology.Bindings)
         {
-            var exchangeName = defenition.QueueName;
+            var exchangeName = defenition.ExchangeName;
             var queueName = defenition.QueueName;
             var routingKey = defenition.RoutingKey;
             var args = defenition.Arguments;
 
-            _logger.LogInformation("Binding queue '{queue}' to exchange '{exchange}' with routing key '{rk}'",
-                queueName, exchangeName, routingKey);
-
             await channel.QueueBindAsync(queueName, exchangeName, routingKey, arguments: args, cancellationToken: cancellationToken);
+            
+            _logger.LogInformation("Successfully bound queue '{queue}' to exchange '{exchange}' with routing key '{rk}'.",
+                queueName, exchangeName, routingKey);
         }
     }
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed)
+            return;
+
         await _channelPool.DisposeAsync();
+        _disposed = true;
     }
 }

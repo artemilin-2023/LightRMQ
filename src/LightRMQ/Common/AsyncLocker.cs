@@ -34,8 +34,9 @@ public sealed class AsyncLocker : IAsyncDisposable
 
     private void Release()
     {
-        if (_semaphore.CurrentCount == _semaphore.Release())
-            throw new SemaphoreFullException("Семафор уже свободен.");
+        _semaphore.Release();
+        //if (_semaphore.CurrentCount == _semaphore.Release())
+        //    throw new SemaphoreFullException("Семафор уже свободен.");
     }
 
     private void ThrowIfDisposed()

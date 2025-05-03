@@ -1,8 +1,8 @@
 ﻿namespace LightRMQ.Configuration.Models;
 
-public class TopologyConfiguration
+internal record TopologyConfiguration
 {
-    public IDictionary<string, ExchangeDefinition> Exchanges { get; } = new Dictionary<string, ExchangeDefinition>();
-    public IDictionary<string, QueueDefinition> Queues { get; } = new Dictionary<string, QueueDefinition>();
-    public IList<BindingDefinition> Bindings { get; } = [];
+    internal required IReadOnlyDictionary<string, ExchangeDefinition> Exchanges { get; init; }
+    internal required IReadOnlyDictionary<string, QueueDefinition> Queues { get; init; }
+    internal required IReadOnlyList<BindingDefinition> Bindings { get; init; }
 }

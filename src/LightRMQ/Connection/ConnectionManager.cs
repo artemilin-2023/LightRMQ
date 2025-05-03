@@ -1,4 +1,4 @@
-﻿using LightRMQ.Abstraction;
+﻿using LightRMQ.Abstractions;
 using LightRMQ.Common;
 using LightRMQ.Configuration.Models;
 using Microsoft.Extensions.Logging;
@@ -6,14 +6,15 @@ using RabbitMQ.Client;
 
 namespace LightRMQ.Connection;
 
-internal class ConnectionManager(RabbitMqConfiguration configuration, ILogger<ConnectionManager> logger) :
+internal class ConnectionManager(LightRmqConfiguration configuration, ILogger<ConnectionManager> logger) :
     IConnectionManager,
     IAsyncDisposable
 {
-    private readonly RabbitMqConfiguration _configuration = configuration;
+    private readonly LightRmqConfiguration _configuration = configuration;
     private readonly ILogger<ConnectionManager> _logger = logger;
-    private IConnection? _connection;
     private readonly AsyncLocker _locker = new();
+    private IConnection? _connection;
+    private bool _disposed = false;
 
     public async Task<IConnection> GetOrCreateConnectionAsync(CancellationToken cancellationToken)
     {
@@ -56,7 +57,11 @@ internal class ConnectionManager(RabbitMqConfiguration configuration, ILogger<Co
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed) return;
+
         if (_connection is not null)
             await _connection.DisposeAsync().AsTask();
+
+        _disposed = true;
     }
 }

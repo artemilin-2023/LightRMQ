@@ -1,6 +1,6 @@
 ﻿namespace LightRMQ.Configuration.Models;
 
-public class RabbitMqOptions
+internal class RabbitMqOptions
 {
     public required string ConnectionString { get; set; }
     public string? ClientName { get; set; }
@@ -8,5 +8,5 @@ public class RabbitMqOptions
     public TimeSpan Heartbeat { get; set; }
     public int PrefetchCount { get; set; }
     public TimeSpan ConnectionTimeout { get; set; }
-    public TopologyConfiguration Topology { get; set; } = new TopologyConfiguration();
+    internal required TopologyConfiguration Topology { get; init; }
 }

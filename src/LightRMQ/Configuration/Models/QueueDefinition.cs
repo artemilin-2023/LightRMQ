@@ -8,7 +8,7 @@ public class QueueDefinition
     internal bool AutoDelete { get; private set; } = false;
     internal IDictionary<string, object?> Arguments { get; private set; } = new Dictionary<string, object?>();
 
-    public QueueDefinition(string name)
+    internal QueueDefinition(string name)
     {
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         Name = name;

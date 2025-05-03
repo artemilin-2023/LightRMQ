@@ -10,7 +10,7 @@ public class ExchangeDefinition
     internal bool AutoDelete { get; private set; } = false;
     internal IDictionary<string, object?> Arguments { get; private set; } = new Dictionary<string, object?>();
 
-    public ExchangeDefinition(string name, string type)
+    internal ExchangeDefinition(string name, string type)
     {
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         if (ExchangeType.All().Contains(type) is false)

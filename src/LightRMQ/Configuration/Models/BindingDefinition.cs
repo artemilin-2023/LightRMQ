@@ -5,9 +5,9 @@ public class BindingDefinition
     internal string ExchangeName { get; init; }
     internal string QueueName { get; init; }
     internal string RoutingKey { get; init; }
-    internal IDictionary<string, object?> Arguments { get; private set} = new Dictionary<string, object?>();
+    internal IDictionary<string, object?> Arguments { get; private set; } = new Dictionary<string, object?>();
 
-    public BindingDefinition(string exchangeName, string queueName, string routingKey)
+    internal BindingDefinition(string exchangeName, string queueName, string routingKey)
     {
         ArgumentNullException.ThrowIfNull(exchangeName, nameof(exchangeName));
         ArgumentNullException.ThrowIfNull(queueName, nameof(queueName));

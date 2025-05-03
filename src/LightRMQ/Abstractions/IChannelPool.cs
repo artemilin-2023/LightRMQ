@@ -1,6 +1,6 @@
 ﻿using RabbitMQ.Client;
 
-namespace LightRMQ.Abstraction;
+namespace LightRMQ.Abstractions;
 
 internal interface IChannelPool
 {

@@ -1,4 +1,4 @@
-﻿using LightRMQ.Abstraction;
+﻿using LightRMQ.Abstractions;
 using LightRMQ.Common;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
@@ -134,6 +134,8 @@ internal class ChannelPool :
 
     public async ValueTask DisposeAsync()
     {
+        if (_disposed) return;
+
         using (await _locker.LockAsync())
         {
 

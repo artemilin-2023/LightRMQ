@@ -1,12 +1,12 @@
 ﻿namespace LightRMQ.Configuration.Models;
 
-internal record RabbitMqConfiguration
+internal record LightRmqConfiguration
 {
     public RabbitMqOptions Options { get; }
     public IReadOnlyList<ConsumerRegistration> ConsumerRegistrations { get; }
     public IReadOnlyList<SerializerRegistration> SerializerRegistrations { get; }
 
-    internal RabbitMqConfiguration(
+    internal LightRmqConfiguration(
         RabbitMqOptions options,
         List<ConsumerRegistration> consumerRegistrations,
         List<SerializerRegistration> serializerRegistrations)
