@@ -1,5 +1,4 @@
-﻿using LightRMQ.Abstractions;
-using LightRMQ.Configuration;
+﻿using LightRMQ.Configuration;
 using LightRMQ.Configuration.Abstractions;
 using LightRMQ.Configuration.Builders;
 using LightRMQ.Connection;

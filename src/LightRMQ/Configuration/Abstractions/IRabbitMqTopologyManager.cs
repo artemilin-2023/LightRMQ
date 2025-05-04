@@ -1,4 +1,4 @@
-﻿namespace LightRMQ.Abstractions;
+﻿namespace LightRMQ.Configuration.Abstractions;
 
 public interface IRabbitMqTopologyManager : IAsyncDisposable
 {

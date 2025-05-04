@@ -22,7 +22,7 @@ public sealed class AsyncLocker : IAsyncDisposable
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
     {
-        ThrowIfDisposed();
+        ObjectDisposedException.ThrowIf(_disposed, this);
 
         if (timeout.HasValue)
             await _semaphore.WaitAsync(timeout.Value, cancellationToken).ConfigureAwait(false);
@@ -35,14 +35,6 @@ public sealed class AsyncLocker : IAsyncDisposable
     private void Release()
     {
         _semaphore.Release();
-        //if (_semaphore.CurrentCount == _semaphore.Release())
-        //    throw new SemaphoreFullException("Семафор уже свободен.");
-    }
-
-    private void ThrowIfDisposed()
-    {
-        if (_disposed)
-            throw new ObjectDisposedException(nameof(AsyncLocker));
     }
 
     public ValueTask DisposeAsync()

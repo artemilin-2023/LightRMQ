@@ -1,5 +1,5 @@
-﻿using LightRMQ.Abstractions;
-using LightRMQ.Common;
+﻿using LightRMQ.Common;
+using LightRMQ.Connection.Abstractions;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using System.Collections.Concurrent;

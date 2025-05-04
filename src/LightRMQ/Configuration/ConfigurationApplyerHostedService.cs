@@ -1,7 +1,8 @@
-﻿using LightRMQ.Abstractions;
+﻿using LightRMQ.Configuration.Abstractions;
 using Microsoft.Extensions.Hosting;
 
 namespace LightRMQ.Configuration;
+
 internal class ConfigurationApplyerHostedService(IRabbitMqTopologyManager topologyManager) : IHostedService
 {
     private readonly IRabbitMqTopologyManager _topologyManager = topologyManager;

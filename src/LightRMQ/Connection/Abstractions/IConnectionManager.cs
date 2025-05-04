@@ -1,6 +1,6 @@
 ﻿using RabbitMQ.Client;
 
-namespace LightRMQ.Abstractions;
+namespace LightRMQ.Connection.Abstractions;
 
 internal interface IConnectionManager
 {

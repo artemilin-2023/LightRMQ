@@ -1,4 +1,4 @@
-﻿using LightRMQ.Abstractions;
+﻿using LightRMQ.Configuration.Abstractions;
 using LightRMQ.Configuration.Models;
 using LightRMQ.Connection;
 using Microsoft.Extensions.Logging;

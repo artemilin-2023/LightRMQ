@@ -4,5 +4,5 @@ namespace LightRMQ.Configuration.Models;
 
 public class SerializerRegistration
 {
-    public required IMessageSerializer Serializer { get; set; }
+    public required IRmqMessageSerializer Serializer { get; set; }
 }
