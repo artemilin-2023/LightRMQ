@@ -2,6 +2,8 @@
 using LightRMQ.Configuration.Abstractions;
 using LightRMQ.Configuration.Builders;
 using LightRMQ.Connection;
+using LightRMQ.Serialization;
+using LightRMQ.Serialization.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LightRMQ.DependencyInjection;
@@ -16,13 +18,14 @@ public static class ServiceRegistrationExtension
         services.BuildAndRegisterConfiguration(configure); 
         services.AddNetworkManagers();
         services.AddTopology();
+        services.AddSerializers();
 
         return services;
     }
 
     private static IServiceCollection BuildAndRegisterConfiguration(this IServiceCollection services, Action<ILightRmqConfigurationBuilder> configure)
     {
-        var builder = new LightRmqConfigurationBuilder();
+        var builder = new LightRmqConfigurationBuilder(services);
         configure(builder);
         var configuration = builder.Build();
 
@@ -43,6 +46,18 @@ public static class ServiceRegistrationExtension
     {
         services.AddSingleton<IRabbitMqTopologyManager, TopologyManager>();
         services.AddHostedService<ConfigurationApplyerHostedService>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddSerializers(this IServiceCollection services)
+    {
+        services.AddSingleton<SerializerRegistryFactory>();
+        services.AddSingleton<ISerializerRegistry, SerializerRegistry>(sp =>
+        {
+            var factory = sp.GetRequiredService<SerializerRegistryFactory>();
+            return (SerializerRegistry)factory.Create();
+        });
 
         return services;
     }

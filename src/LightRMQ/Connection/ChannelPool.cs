@@ -28,6 +28,8 @@ internal class ChannelPool :
         {
             _producerChannels.Add(CreateChannelAsync(CancellationToken.None).GetAwaiter().GetResult());
         }
+
+        _logger.LogInformation("Channel pool initialized with {Count} channels.", PoolInitializeSize);
     }
 
     public async Task<IChannel> GetConsumerChannelAsync(CancellationToken cancellationToken)
@@ -44,7 +46,7 @@ internal class ChannelPool :
             var connection = await _connectionManager.GetOrCreateConnectionAsync(cancellationToken);
             var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
-            _logger.LogInformation("New RabbitMQ channel opened successfully.");
+            _logger.LogDebug("New RabbitMQ channel opened successfully.");
 
             return channel;
         }

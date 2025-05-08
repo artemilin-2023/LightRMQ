@@ -6,14 +6,20 @@ using System.Collections.Concurrent;
 
 namespace LightRMQ.Serialization;
 
-internal class SerializerRegistry(IRmqMessageSerializer? defualtSerializer = null, ILogger<SerializerRegistry> logger) : ISerializerRegistry
+internal class SerializerRegistry(ILogger<SerializerRegistry> logger) : ISerializerRegistry
 {
-    private readonly List<(Predicate<MessageContext>, IRmqMessageSerializer)> _serializers = [];
-    private readonly ConcurrentDictionary<Type, IRmqMessageSerializer> _messageTypeSerializersCache = [];
-    private readonly IRmqMessageSerializer? _defualtSerializer = defualtSerializer;
+    public IRabbitMqMessageSerializer DefualtSerializer
+    {
+        get => _defualtSerializer ?? throw new Exception("No default serializer set. Ensure that a default serializer is configured.");
+        set => _defualtSerializer ??= value;
+    }
+
+    private readonly List<(Predicate<MessageContext>, IRabbitMqMessageSerializer)> _serializers = [];
+    private readonly ConcurrentDictionary<Type, IRabbitMqMessageSerializer> _messageTypeSerializersCache = [];
+    private IRabbitMqMessageSerializer? _defualtSerializer;
     private readonly ILogger<SerializerRegistry> _logger = logger;
 
-    public IRmqMessageSerializer GetSerializerByContext(MessageContext context)
+    public IRabbitMqMessageSerializer GetSerializerByContext(MessageContext context)
     {
         ArgumentNullException.ThrowIfNull(context, nameof(context));
 
@@ -40,7 +46,7 @@ internal class SerializerRegistry(IRmqMessageSerializer? defualtSerializer = nul
         return _defualtSerializer ?? throw new Exception("No serializer found for the given context. Ensure that serializers are configured or set a default one.");
     }
 
-    public void RegisterSerializer(IRmqMessageSerializer serializer, Predicate<MessageContext> predicate)
+    public void RegisterSerializer(IRabbitMqMessageSerializer serializer, Predicate<MessageContext> predicate)
     {
         ArgumentNullException.ThrowIfNull(serializer, nameof(serializer));
         ArgumentNullException.ThrowIfNull(predicate, nameof(predicate));

@@ -4,15 +4,12 @@ internal record LightRmqConfiguration
 {
     public RabbitMqOptions Options { get; }
     public IReadOnlyList<ConsumerRegistration> ConsumerRegistrations { get; }
-    public IReadOnlyList<SerializerRegistration> SerializerRegistrations { get; }
+    public SerializerConfiguration SerializerConfiguration { get; }
 
-    internal LightRmqConfiguration(
-        RabbitMqOptions options,
-        List<ConsumerRegistration> consumerRegistrations,
-        List<SerializerRegistration> serializerRegistrations)
+    internal LightRmqConfiguration(RabbitMqOptions options, List<ConsumerRegistration> consumerRegistrations, SerializerConfiguration serializerConfigurations)
     {
         Options = options;
         ConsumerRegistrations = consumerRegistrations;
-        SerializerRegistrations = serializerRegistrations;
+        SerializerConfiguration = serializerConfigurations;
     }
 }

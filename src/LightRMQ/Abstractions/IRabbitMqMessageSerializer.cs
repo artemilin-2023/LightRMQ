@@ -1,6 +1,6 @@
 ﻿namespace LightRMQ.Abstractions;
 
-public interface IRmqMessageSerializer
+public interface IRabbitMqMessageSerializer
 {
     string ContentType { get; }
     byte[] Serialize<TObject>(TObject obj);

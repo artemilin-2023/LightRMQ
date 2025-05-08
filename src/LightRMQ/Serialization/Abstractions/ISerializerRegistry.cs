@@ -5,6 +5,7 @@ namespace LightRMQ.Serialization.Abstractions;
 
 internal interface ISerializerRegistry
 {
-    public IRmqMessageSerializer GetSerializerByContext(MessageContext context);
-    public void RegisterSerializer(IRmqMessageSerializer serializer, Predicate<MessageContext> predicate);
+    public IRabbitMqMessageSerializer DefualtSerializer { get; }
+    public IRabbitMqMessageSerializer GetSerializerByContext(MessageContext context);
+    public void RegisterSerializer(IRabbitMqMessageSerializer serializer, Predicate<MessageContext> predicate);
 }

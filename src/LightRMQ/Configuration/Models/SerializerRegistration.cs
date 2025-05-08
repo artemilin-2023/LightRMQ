@@ -1,8 +1,9 @@
-﻿using LightRMQ.Abstractions;
+﻿using LightRMQ.Core;
 
 namespace LightRMQ.Configuration.Models;
 
-public class SerializerRegistration
+internal class SerializerRegistration
 {
-    public required IRmqMessageSerializer Serializer { get; set; }
+    public required Type SerializerType { get; set; }
+    public required Predicate<MessageContext> Predicate { get; set; }
 }

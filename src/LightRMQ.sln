@@ -5,12 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightRMQ", "LightRMQ\LightRMQ.csproj", "{73B280B4-7626-459D-9190-3196916737CD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Элементы решения", "Элементы решения", "{8133EA80-46DD-40A0-A153-F55D2D825F8C}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightRMQ.Tests.Integration", "LightRMQ.Tests.Integration\LightRMQ.Tests.Integration.csproj", "{A29C8130-F7CC-4D97-9025-67CE2F558D4E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightRMQ.Example", "LightRMQ.Example\LightRMQ.Example.csproj", "{A29C8130-F7CC-4D97-9025-67CE2F558D4E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

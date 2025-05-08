@@ -7,7 +7,7 @@ public sealed class AsyncLocker : IAsyncDisposable
 
     public AsyncLocker(int initialCount = 1, int maxCount = 1)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(initialCount);
+        ArgumentOutOfRangeException.ThrowIfNegative(initialCount, nameof(initialCount));
 
         if (maxCount < 1 || initialCount > maxCount)
             throw new ArgumentOutOfRangeException(nameof(maxCount));
@@ -15,9 +15,6 @@ public sealed class AsyncLocker : IAsyncDisposable
         _semaphore = new SemaphoreSlim(initialCount, maxCount);
     }
 
-    /// <summary>
-    /// Блокирует секцию, можно отменять через токен или задать таймаут.
-    /// </summary>
     public async Task<Releaser> LockAsync(
         TimeSpan? timeout = null,
         CancellationToken cancellationToken = default)
@@ -25,17 +22,19 @@ public sealed class AsyncLocker : IAsyncDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         if (timeout.HasValue)
+        {
             await _semaphore.WaitAsync(timeout.Value, cancellationToken).ConfigureAwait(false);
-
-        await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         return new Releaser(this);
     }
 
     private void Release()
-    {
-        _semaphore.Release();
-    }
+        => _semaphore.Release();
 
     public ValueTask DisposeAsync()
     {
@@ -47,9 +46,6 @@ public sealed class AsyncLocker : IAsyncDisposable
         return ValueTask.CompletedTask;
     }
 
-    /// <summary>
-    /// Вспомогательный struct-«замок», который отпустит семафор при Dispose.
-    /// </summary>
     public record struct Releaser : IDisposable
     {
         private readonly AsyncLocker _toRelease { get; init; }

@@ -4,4 +4,5 @@ public interface ILightRmqConfigurationBuilder
 {
     public ILightRmqConfigurationBuilder Topology(Action<ITopologyConfigurationBuilder> topology);
     public ILightRmqConfigurationBuilder ConnectionString(string connectionString);
+    public ILightRmqConfigurationBuilder Serializers(Action<ISerializerConfigurationBuilder> serializersBuilder);
 }

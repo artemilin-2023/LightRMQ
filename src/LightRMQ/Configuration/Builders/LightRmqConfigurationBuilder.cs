@@ -1,12 +1,14 @@
 ﻿using LightRMQ.Configuration.Abstractions;
 using LightRMQ.Configuration.Models;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LightRMQ.Configuration.Builders;
 
-internal class LightRmqConfigurationBuilder :
+internal class LightRmqConfigurationBuilder(IServiceCollection services) :
     ILightRmqConfigurationBuilder
 {
     private readonly TopologyConfigurationBuilder _topologyConfigurationBuilder = new();
+    private readonly SerializerConfigurationBuilder _serializerConfigurationBuilder = new(services);
     private string? _connectionString;
 
     public ILightRmqConfigurationBuilder Topology(Action<ITopologyConfigurationBuilder> topology)
@@ -27,17 +29,27 @@ internal class LightRmqConfigurationBuilder :
         return this;
     }
 
+    public ILightRmqConfigurationBuilder Serializers(Action<ISerializerConfigurationBuilder> serializersBuilder)
+    {
+        ArgumentNullException.ThrowIfNull(serializersBuilder);
+        
+        serializersBuilder(_serializerConfigurationBuilder);
+        return this;
+    }
+
     internal LightRmqConfiguration Build()
     {
         // Пока что так, потом будет нормально без нулов и всей хуйни
 
-        var options = new RabbitMqOptions()
+        var rmqOptions = new RabbitMqOptions()
         {
             ConnectionString = _connectionString ?? throw new InvalidOperationException("Connection string must be set before building configuration."),
             Topology = _topologyConfigurationBuilder.Build()
         };
 
-        var configuration = new LightRmqConfiguration(options, null, null);
+        var serializerConfiguration = _serializerConfigurationBuilder.Build();
+
+        var configuration = new LightRmqConfiguration(rmqOptions, null, serializerConfiguration);
 
         return configuration;
     }
