@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace LightRMQ.Configuration;
 
-internal class ConfigurationApplyerHostedService(IRabbitMqTopologyManager topologyManager, ISerializerRegistry serializerRegistry) : IHostedService
+internal class ConfigurationApplyerHostedService(IRabbitMqTopologyManager topologyManager) : IHostedService
 {
     private readonly IRabbitMqTopologyManager _topologyManager = topologyManager;
 

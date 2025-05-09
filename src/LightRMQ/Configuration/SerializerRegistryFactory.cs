@@ -1,5 +1,4 @@
-﻿using LightRMQ.Abstractions;
-using LightRMQ.Configuration.Models;
+﻿using LightRMQ.Configuration.Models;
 using LightRMQ.Serialization;
 using LightRMQ.Serialization.Abstractions;
 using Microsoft.Extensions.DependencyInjection;

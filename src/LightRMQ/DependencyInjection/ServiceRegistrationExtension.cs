@@ -1,7 +1,9 @@
-﻿using LightRMQ.Configuration;
+﻿using LightRMQ.Clients;
+using LightRMQ.Configuration;
 using LightRMQ.Configuration.Abstractions;
 using LightRMQ.Configuration.Builders;
 using LightRMQ.Connection;
+using LightRMQ.Connection.Abstractions;
 using LightRMQ.Serialization;
 using LightRMQ.Serialization.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +21,7 @@ public static class ServiceRegistrationExtension
         services.AddNetworkManagers();
         services.AddTopology();
         services.AddSerializers();
+        services.AddClients();
 
         return services;
     }
@@ -37,6 +40,7 @@ public static class ServiceRegistrationExtension
     private static IServiceCollection AddNetworkManagers(this IServiceCollection services)
     {
         services.AddSingleton<ChannelPool>();
+        services.AddSingleton<IChannelPool, ChannelPool>();
         services.AddSingleton<ConnectionManager>();
         
         return services;
@@ -58,6 +62,13 @@ public static class ServiceRegistrationExtension
             var factory = sp.GetRequiredService<SerializerRegistryFactory>();
             return (SerializerRegistry)factory.Create();
         });
+
+        return services;
+    }
+
+    private static IServiceCollection AddClients(this IServiceCollection services)
+    {
+        services.AddTransient<IRabbitMqClient, RabbitMqClient>();
 
         return services;
     }

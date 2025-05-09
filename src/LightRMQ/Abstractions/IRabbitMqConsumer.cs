@@ -1,4 +1,4 @@
-﻿namespace LightRMQ.Abstractions;
+﻿namespace LightRMQ;
 
 public interface IRabbitMqConsumer
 {

@@ -1,21 +1,21 @@
-﻿using LightRMQ.Abstractions;
-using LightRMQ.Common;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace LightRMQ.Serialization.DefaultSerializers;
 
-public class RabbitMqJsonSerializer : IRabbitMqMessageSerializer
+internal class RabbitMqJsonSerializer : 
+    IRabbitMqMessageSerializer
 {
+    public string ContentType => ContentTypes.Application.Json;
+    public string ContentEncoding => "utf-8";
+
+    private readonly JsonSerializerOptions? _options;
+
     public RabbitMqJsonSerializer() { }
 
     public RabbitMqJsonSerializer(JsonSerializerOptions? options)
     {
         _options = options;
     }
-
-    public string ContentType => ContentTypes.Application.Json;
-
-    private readonly JsonSerializerOptions? _options;
 
     public TObject Deserialize<TObject>(byte[] data)
         => JsonSerializer.Deserialize<TObject>(data, _options) 

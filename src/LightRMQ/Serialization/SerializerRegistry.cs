@@ -1,12 +1,12 @@
-﻿using LightRMQ.Abstractions;
-using LightRMQ.Core;
+﻿using LightRMQ.Core;
 using LightRMQ.Serialization.Abstractions;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace LightRMQ.Serialization;
 
-internal class SerializerRegistry(ILogger<SerializerRegistry> logger) : ISerializerRegistry
+internal class SerializerRegistry(ILogger<SerializerRegistry> logger) : 
+    ISerializerRegistry
 {
     public IRabbitMqMessageSerializer DefualtSerializer
     {
@@ -14,12 +14,13 @@ internal class SerializerRegistry(ILogger<SerializerRegistry> logger) : ISeriali
         set => _defualtSerializer ??= value;
     }
 
-    private readonly List<(Predicate<MessageContext>, IRabbitMqMessageSerializer)> _serializers = [];
+    private readonly List<(Predicate<MessageContext> predicate, IRabbitMqMessageSerializer serializer)> _serializers = [];
     private readonly ConcurrentDictionary<Type, IRabbitMqMessageSerializer> _messageTypeSerializersCache = [];
+    private readonly ConcurrentDictionary<Type, IRabbitMqMessageSerializer> _serializersTypeCache = [];
     private IRabbitMqMessageSerializer? _defualtSerializer;
     private readonly ILogger<SerializerRegistry> _logger = logger;
 
-    public IRabbitMqMessageSerializer GetSerializerByContext(MessageContext context)
+    public IRabbitMqMessageSerializer GetByContext(MessageContext context)
     {
         ArgumentNullException.ThrowIfNull(context, nameof(context));
 
@@ -56,4 +57,29 @@ internal class SerializerRegistry(ILogger<SerializerRegistry> logger) : ISeriali
         
         _serializers.Add((predicate, serializer));
     }
+
+    public IRabbitMqMessageSerializer? Get(Type serializerType)
+    {
+        if (serializerType.GetInterface(nameof(IRabbitMqMessageSerializer)) is null)
+            throw new InvalidOperationException($"Type {serializerType.Name} is not a valid serializer type.");
+        
+        if (_serializersTypeCache.TryGetValue(serializerType, out var cachedSerializer))
+        {
+            _logger.LogDebug("Using cached serializer '{Serializer}'", serializerType.Name);
+            return cachedSerializer;
+        }
+
+        var serializer = _serializers!.FirstOrDefault(i => i.serializer!.GetType() == serializerType, defaultValue: (null, null));
+        if (serializer is (null, null))
+            return null;
+
+        _serializersTypeCache.TryAdd(serializerType, serializer.serializer!);
+        _logger.LogDebug("Added serializer '{Serializer}' to cache", serializerType.Name);
+        return serializer.serializer!;
+    }
+
+    public IRabbitMqMessageSerializer GetOrDefault(Type? serializerType)
+        => serializerType is not null 
+        ? Get(serializerType) ?? DefualtSerializer
+        : DefualtSerializer;
 }

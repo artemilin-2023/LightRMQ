@@ -1,5 +1,4 @@
-﻿using LightRMQ.Abstractions;
-using LightRMQ.Configuration.Abstractions;
+﻿using LightRMQ.Configuration.Abstractions;
 using LightRMQ.Configuration.Models;
 using LightRMQ.Core;
 using LightRMQ.Serialization.DefaultSerializers;

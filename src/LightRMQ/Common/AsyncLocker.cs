@@ -1,6 +1,6 @@
 ﻿namespace LightRMQ.Common;
 
-public sealed class AsyncLocker : IAsyncDisposable
+internal sealed class AsyncLocker : IAsyncDisposable
 {
     private readonly SemaphoreSlim _semaphore;
     private bool _disposed;

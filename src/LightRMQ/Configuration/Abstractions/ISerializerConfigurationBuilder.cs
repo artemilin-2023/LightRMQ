@@ -1,5 +1,4 @@
-﻿using LightRMQ.Abstractions;
-using LightRMQ.Core;
+﻿using LightRMQ.Core;
 using System.Text.Json;
 
 namespace LightRMQ.Configuration.Abstractions;

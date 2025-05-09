@@ -1,31 +1,37 @@
 using LightRMQ.DependencyInjection;
-using LightRMQ.Serialization.DefaultSerializers;
+using LightRMQ.Example;
 using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddLightRmq(config =>
-{
-    config.Topology(topology => topology
-        .Queue("queue", q => q.AsDurable().AsAutoDelete())
-        .Exchange("hui", ExchangeType.Fanout)
-        .BindQueue("queue", "hui")
-    );
+var services = builder.Services;
 
+services.AddControllers();
+
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen();
+
+services.AddLightRmq(config =>
+{
     config.Topology(topology => topology
         .Queue("aboba")
         .Exchange("bebra", ExchangeType.Topic)
-        .BindQueue("aboba", "bebra", "asdf")
+        .BindQueue(queue: "aboba", exchange: "bebra", routingKey: "asdf")
     );
 
     config.ConnectionString(builder.Configuration.GetConnectionString("rmq")!);
 
     config.Serializers(serializers => serializers
-        .UseJsonSerializer(when: ctx => ctx.ContentType == "application/json").AsDefault()
-        .Use<RabbitMqJsonSerializer>()
+        .UseJsonSerializer(when: ctx => ctx.MessageType.Namespace!.StartsWith("MyNamespace.LegacyModels"))
+        .Use<CustomJsonSerializer>().AsDefault()
     );
 });
 
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
+app.MapControllers();
 
 app.Run();

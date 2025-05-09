@@ -1,4 +1,4 @@
-﻿namespace LightRMQ.Common;
+﻿namespace LightRMQ;
 
 public static class ContentTypes
 {
