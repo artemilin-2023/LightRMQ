@@ -1,11 +1,12 @@
 ﻿namespace LightRMQ.Core;
 
-public sealed record MessageContext
+public sealed record ReceivedMessageContext
 {
-    public Type MessageType { get; private init; }
+    public Type TargetMessageType { get; private init; }
     public string ContentType { get; private init; }
     public string? ContentEncoding { get; private init; }
     public IDictionary<string, object?> Headers { get; private init; }
+    public long PayloadSize { get; private init; }
 
     public string MessageId { get; private init; }
     public string CorrelationId { get; private init; }
@@ -29,11 +30,12 @@ public sealed record MessageContext
     public CancellationToken CancellationToken { get; }
 
     // God sorry...
-    public MessageContext(
+    public ReceivedMessageContext(
         Type messageType, 
         string contentType, 
         string? contentEncoding, 
-        IDictionary<string, object?> headers, 
+        IDictionary<string, object?> headers,
+        long payloadSize,
         string messageId, 
         string correlationId, 
         string replyTo, 
@@ -52,10 +54,11 @@ public sealed record MessageContext
         string clusterId, 
         CancellationToken cancellationToken)
     {
-        MessageType = messageType;
+        TargetMessageType = messageType;
         ContentType = contentType;
         ContentEncoding = contentEncoding;
         Headers = headers;
+        PayloadSize = payloadSize;
         MessageId = messageId;
         CorrelationId = correlationId;
         ReplyTo = replyTo;

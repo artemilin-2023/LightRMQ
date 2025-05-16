@@ -23,7 +23,7 @@ internal class SerializerConfigurationBuilder(IServiceCollection services) :
         return this;
     }
 
-    public ISerializerConfigurationBuilder Use<TSerializer>(Predicate<MessageContext>? when = null) 
+    public ISerializerConfigurationBuilder Use<TSerializer>(Predicate<ReceivedMessageContext>? when = null) 
         where TSerializer : class, IRabbitMqMessageSerializer
     {
         _services.AddSingleton(typeof(TSerializer));
@@ -37,7 +37,7 @@ internal class SerializerConfigurationBuilder(IServiceCollection services) :
         return this;
     }
 
-    public ISerializerConfigurationBuilder Use<TSerializer>(TSerializer serializer, Predicate<MessageContext>? when = null) 
+    public ISerializerConfigurationBuilder Use<TSerializer>(TSerializer serializer, Predicate<ReceivedMessageContext>? when = null) 
         where TSerializer : class, IRabbitMqMessageSerializer
     {
         _services.AddSingleton(serializer);
@@ -51,7 +51,7 @@ internal class SerializerConfigurationBuilder(IServiceCollection services) :
         return this;
     }
 
-    public ISerializerConfigurationBuilder UseJsonSerializer(JsonSerializerOptions? options = null, Predicate<MessageContext>? when = null)
+    public ISerializerConfigurationBuilder UseJsonSerializer(JsonSerializerOptions? options = null, Predicate<ReceivedMessageContext>? when = null)
     {
         var serializer = new RabbitMqJsonSerializer(options);
         return Use(serializer, when);

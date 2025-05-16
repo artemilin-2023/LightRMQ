@@ -22,7 +22,7 @@ services.AddLightRmq(config =>
     config.ConnectionString(builder.Configuration.GetConnectionString("rmq")!);
 
     config.Serializers(serializers => serializers
-        .UseJsonSerializer(when: ctx => ctx.MessageType.Namespace!.StartsWith("MyNamespace.LegacyModels"))
+        .UseJsonSerializer(when: ctx => ctx.TargetMessageType.Namespace!.StartsWith("MyNamespace.LegacyModels"))
         .Use<CustomJsonSerializer>().AsDefault()
     );
 });

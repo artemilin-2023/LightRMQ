@@ -14,31 +14,31 @@ internal class SerializerRegistry(ILogger<SerializerRegistry> logger) :
         set => _defualtSerializer ??= value;
     }
 
-    private readonly List<(Predicate<MessageContext> predicate, IRabbitMqMessageSerializer serializer)> _serializers = [];
+    private readonly List<(Predicate<ReceivedMessageContext> predicate, IRabbitMqMessageSerializer serializer)> _serializers = [];
     private readonly ConcurrentDictionary<Type, IRabbitMqMessageSerializer> _messageTypeSerializersCache = [];
     private readonly ConcurrentDictionary<Type, IRabbitMqMessageSerializer> _serializersTypeCache = [];
     private IRabbitMqMessageSerializer? _defualtSerializer;
     private readonly ILogger<SerializerRegistry> _logger = logger;
 
-    public IRabbitMqMessageSerializer GetByContext(MessageContext context)
+    public IRabbitMqMessageSerializer GetByContext(ReceivedMessageContext context)
     {
         ArgumentNullException.ThrowIfNull(context, nameof(context));
 
-        if (context.MessageType is not null && _messageTypeSerializersCache.TryGetValue(context.MessageType, out var cachedSerializer))
+        if (context.TargetMessageType is not null && _messageTypeSerializersCache.TryGetValue(context.TargetMessageType, out var cachedSerializer))
         {
-            _logger.LogDebug("Using cached serializer {Serializer} for message type: {MessageType}", cachedSerializer.GetType().Name, context.MessageType.Name);
+            _logger.LogDebug("Using cached serializer {Serializer} for message type: {MessageType}", cachedSerializer.GetType().Name, context.TargetMessageType.Name);
             return cachedSerializer;
         }
 
-        _logger.LogDebug("No cached serializer found for message type: {MessageType}.", context.MessageType?.Name);
+        _logger.LogDebug("No cached serializer found for message type: {MessageType}.", context.TargetMessageType?.Name);
         foreach (var (predicate, serializer) in _serializers)
         {
             if (predicate(context))
             {
-                if (context.MessageType is not null)
-                    _messageTypeSerializersCache.TryAdd(context.MessageType, serializer);
+                if (context.TargetMessageType is not null)
+                    _messageTypeSerializersCache.TryAdd(context.TargetMessageType, serializer);
 
-                _logger.LogDebug("Using serializer {Serializer} for message type: {MessageType}", serializer.GetType().Name, context.MessageType!.Name);
+                _logger.LogDebug("Using serializer {Serializer} for message type: {MessageType}", serializer.GetType().Name, context.TargetMessageType!.Name);
                 return serializer;
             }
         }
@@ -47,7 +47,7 @@ internal class SerializerRegistry(ILogger<SerializerRegistry> logger) :
         return _defualtSerializer ?? throw new Exception("No serializer found for the given context. Ensure that serializers are configured or set a default one.");
     }
 
-    public void RegisterSerializer(IRabbitMqMessageSerializer serializer, Predicate<MessageContext> predicate)
+    public void RegisterSerializer(IRabbitMqMessageSerializer serializer, Predicate<ReceivedMessageContext> predicate)
     {
         ArgumentNullException.ThrowIfNull(serializer, nameof(serializer));
         ArgumentNullException.ThrowIfNull(predicate, nameof(predicate));
