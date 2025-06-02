@@ -1,0 +1,1 @@
+библиотека для работы с rabbitmq, для C#. work in progress 
