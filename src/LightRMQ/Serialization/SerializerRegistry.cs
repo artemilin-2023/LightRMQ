@@ -20,7 +20,7 @@ internal class SerializerRegistry(ILogger<SerializerRegistry> logger) :
     private IRabbitMqMessageSerializer? _defualtSerializer;
     private readonly ILogger<SerializerRegistry> _logger = logger;
 
-    public IRabbitMqMessageSerializer GetByContext(ReceivedMessageContext context)
+    public IRabbitMqMessageSerializer GetByContextOrDefault(ReceivedMessageContext context)
     {
         ArgumentNullException.ThrowIfNull(context, nameof(context));
 

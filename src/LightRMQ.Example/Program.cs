@@ -1,5 +1,7 @@
+using LightRMQ.Core;
 using LightRMQ.DependencyInjection;
 using LightRMQ.Example;
+using LightRMQ.Example.Models;
 using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +26,14 @@ services.AddLightRmq(config =>
     config.Serializers(serializers => serializers
         .UseJsonSerializer(when: ctx => ctx.TargetMessageType.Namespace!.StartsWith("MyNamespace.LegacyModels"))
         .Use<CustomJsonSerializer>().AsDefault()
+    );
+
+    config.Handlers(handlers =>
+        handlers.Register((SimpleMessage msg, ReceivedMessageContext ctx, CancellationToken ct) =>
+        {
+            Console.WriteLine(msg.Text);
+            return Task.CompletedTask;
+        }, ops => ops.WithQueue("aboba"))
     );
 });
 

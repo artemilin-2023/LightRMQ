@@ -23,7 +23,7 @@ internal class SerializerConfigurationBuilder(IServiceCollection services) :
         return this;
     }
 
-    public ISerializerConfigurationBuilder Use<TSerializer>(Predicate<ReceivedMessageContext>? when = null) 
+    public ISerializerConfigurationBuilder Use<TSerializer>(Predicate<ContextArgs>? when = null) 
         where TSerializer : class, IRabbitMqMessageSerializer
     {
         _services.AddSingleton(typeof(TSerializer));
@@ -37,7 +37,7 @@ internal class SerializerConfigurationBuilder(IServiceCollection services) :
         return this;
     }
 
-    public ISerializerConfigurationBuilder Use<TSerializer>(TSerializer serializer, Predicate<ReceivedMessageContext>? when = null) 
+    public ISerializerConfigurationBuilder Use<TSerializer>(TSerializer serializer, Predicate<ContextArgs>? when = null) 
         where TSerializer : class, IRabbitMqMessageSerializer
     {
         _services.AddSingleton(serializer);
@@ -51,13 +51,13 @@ internal class SerializerConfigurationBuilder(IServiceCollection services) :
         return this;
     }
 
-    public ISerializerConfigurationBuilder UseJsonSerializer(JsonSerializerOptions? options = null, Predicate<ReceivedMessageContext>? when = null)
+    public ISerializerConfigurationBuilder UseJsonSerializer(JsonSerializerOptions? options = null, Predicate<ContextArgs>? when = null)
     {
         var serializer = new RabbitMqJsonSerializer(options);
         return Use(serializer, when);
     }
 
-    internal SerializerConfiguration Build()
+    public SerializerConfiguration Build()
     {
         if (_serializerRegistrations.Count == 0)
             throw new InvalidOperationException("No serializer registered. Please register a serializer before building the configuration.");

@@ -1,15 +1,22 @@
 ﻿using LightRMQ.Configuration.Abstractions;
 using LightRMQ.Configuration.Models;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace LightRMQ.Configuration.Builders;
 
-internal class LightRmqConfigurationBuilder(IServiceCollection services) :
+internal class LightRmqConfigurationBuilder :
     ILightRmqConfigurationBuilder
 {
-    private readonly TopologyConfigurationBuilder _topologyConfigurationBuilder = new();
-    private readonly SerializerConfigurationBuilder _serializerConfigurationBuilder = new(services);
+    private readonly ITopologyConfigurationBuilder _topologyConfigurationBuilder;
+    private readonly ISerializerConfigurationBuilder _serializerConfigurationBuilder;
+    private readonly IConsumerConfigurationBuilder _consumerConfiguratoinBuilder;
     private string? _connectionString;
+
+    public LightRmqConfigurationBuilder(ITopologyConfigurationBuilder topologyConfigurationBuilder, ISerializerConfigurationBuilder serializerConfigurationBuilder, IConsumerConfigurationBuilder consumerConfiguratonBuilder)
+    {
+        _topologyConfigurationBuilder = topologyConfigurationBuilder;
+        _serializerConfigurationBuilder = serializerConfigurationBuilder;
+        _consumerConfiguratoinBuilder = consumerConfiguratonBuilder;
+    }
 
     public ILightRmqConfigurationBuilder Topology(Action<ITopologyConfigurationBuilder> topology)
     {
@@ -29,18 +36,24 @@ internal class LightRmqConfigurationBuilder(IServiceCollection services) :
         return this;
     }
 
-    public ILightRmqConfigurationBuilder Serializers(Action<ISerializerConfigurationBuilder> serializersBuilder)
+    public ILightRmqConfigurationBuilder Serializers(Action<ISerializerConfigurationBuilder> serializersOptions)
     {
-        ArgumentNullException.ThrowIfNull(serializersBuilder);
+        ArgumentNullException.ThrowIfNull(serializersOptions);
         
-        serializersBuilder(_serializerConfigurationBuilder);
+        serializersOptions(_serializerConfigurationBuilder);
         return this;
     }
 
-    internal LightRmqConfiguration Build()
+    public ILightRmqConfigurationBuilder Handlers(Action<IConsumerConfigurationBuilder> consumingOptions)
     {
-        // Пока что так, потом будет нормально без нулов и всей хуйни
+        ArgumentNullException.ThrowIfNull(consumingOptions);
 
+        consumingOptions(_consumerConfiguratoinBuilder);
+        return this;
+    }
+
+    public LightRmqConfiguration Build()
+    {
         var rmqOptions = new RabbitMqOptions()
         {
             ConnectionString = _connectionString ?? throw new InvalidOperationException("Connection string must be set before building configuration."),
@@ -48,8 +61,9 @@ internal class LightRmqConfigurationBuilder(IServiceCollection services) :
         };
 
         var serializerConfiguration = _serializerConfigurationBuilder.Build();
+        var consumingConfiguration = _consumerConfiguratoinBuilder.Build();
 
-        var configuration = new LightRmqConfiguration(rmqOptions, null, serializerConfiguration);
+        var configuration = new LightRmqConfiguration(rmqOptions, consumingConfiguration, serializerConfiguration);
 
         return configuration;
     }

@@ -1,12 +1,42 @@
-﻿namespace LightRMQ.Configuration.Models;
+﻿using LightRMQ.Consumers;
+
+namespace LightRMQ.Configuration.Models;
 
 public class ConsumerRegistration
 {
-    public required Type MessageType { get; set; }
-    public required Delegate Handler { get; set; }
-    public required string Queue { get; set; }
-    public required string Exchange { get; set; }
-    public required string RoutingKey { get; set; }
-    public int Concurrency { get; set; }
-    public bool AutoAck { get; set; }
+    internal Type MessageType 
+    { 
+        get => _messageType ?? throw new InvalidOperationException(); 
+        init => _messageType = value ?? throw new ArgumentNullException(nameof(value)); 
+    }
+
+    internal string Queue 
+    { 
+        get => _queue ?? throw new InvalidOperationException(); 
+        private set => _queue = value ?? throw new ArgumentNullException(nameof(value)); 
+    }
+    
+    internal Handler<object> Handler 
+    { 
+        get => _handler ?? throw new InvalidOperationException();
+        init => _handler = value ?? throw new ArgumentNullException(nameof(value)); 
+    }
+
+    internal bool AutoAck { get; set; } = true;
+
+    private Type? _messageType;
+    private string? _queue;
+    private Handler<object>? _handler;
+
+    public ConsumerRegistration WithQueue(string queue)
+    {
+        Queue = queue;
+        return this;
+    }
+
+    public ConsumerRegistration WithAutoAck(bool autoAck = true)
+    {
+        AutoAck = autoAck;
+        return this;
+    }
 }

@@ -34,6 +34,8 @@ internal class ChannelPool :
 
     public async Task<IChannel> GetConsumerChannelAsync(CancellationToken cancellationToken)
     {
+        _logger.LogInformation("Getting consumer channel for thread '{thread id}'", Environment.CurrentManagedThreadId);
+
         ObjectDisposedException.ThrowIf(_disposed, this);
         _consumerChannel.Value ??= await CreateChannelAsync(cancellationToken);
         return _consumerChannel.Value;
@@ -117,7 +119,7 @@ internal class ChannelPool :
         {
             foreach (var channel in _producerChannels)
             {
-                if (!IsChannelValid(channel))
+                if (IsChannelValid(channel) is false)
                 {
                     await SafeCloseChannelAsync(channel, cancellationToken);
                     counter++;
@@ -140,14 +142,16 @@ internal class ChannelPool :
 
         using (await _locker.LockAsync())
         {
-
-            await _connectionManager.DisposeAsync();
             foreach (var channel in _producerChannels)
             {
                 await SafeCloseChannelAsync(channel, CancellationToken.None);
             }
+            
+            if (_consumerChannel.IsValueCreated)
+                await SafeCloseChannelAsync(_consumerChannel.Value, CancellationToken.None);
 
             _consumerChannel.Dispose();
+            await _connectionManager.DisposeAsync();
         }
 
         await _locker.DisposeAsync();

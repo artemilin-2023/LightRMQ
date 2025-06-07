@@ -6,7 +6,7 @@ internal record LightRmqConfiguration
     public IReadOnlyList<ConsumerRegistration> ConsumerRegistrations { get; }
     public SerializerConfiguration SerializerConfiguration { get; }
 
-    internal LightRmqConfiguration(RabbitMqOptions options, List<ConsumerRegistration> consumerRegistrations, SerializerConfiguration serializerConfigurations)
+    internal LightRmqConfiguration(RabbitMqOptions options, IReadOnlyList<ConsumerRegistration> consumerRegistrations, SerializerConfiguration serializerConfigurations)
     {
         Options = options;
         ConsumerRegistrations = consumerRegistrations;

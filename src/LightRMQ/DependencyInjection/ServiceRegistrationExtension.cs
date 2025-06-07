@@ -28,7 +28,11 @@ public static class ServiceRegistrationExtension
 
     private static IServiceCollection BuildAndRegisterConfiguration(this IServiceCollection services, Action<ILightRmqConfigurationBuilder> configure)
     {
-        var builder = new LightRmqConfigurationBuilder(services);
+        var topologyBuilder = new TopologyConfigurationBuilder();
+        var serializerBuilder = new SerializerConfigurationBuilder(services);
+        var consumerBuilder = new ConsumerConfigurationBuilder();
+
+        var builder = new LightRmqConfigurationBuilder(topologyBuilder, serializerBuilder, consumerBuilder);
         configure(builder);
         var configuration = builder.Build();
 
