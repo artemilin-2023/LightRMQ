@@ -52,7 +52,7 @@ internal class SerializerRegistry(ILogger<SerializerRegistry> logger) :
         ArgumentNullException.ThrowIfNull(serializer, nameof(serializer));
         ArgumentNullException.ThrowIfNull(predicate, nameof(predicate));
 
-        if (_serializers.Any(p => p.Equals(predicate)))
+        if (_serializers.Any(p => p.predicate.Equals(predicate)))
             throw new ArgumentException("Serializer already registered for the given predicate.");
         
         _serializers.Add((predicate, serializer));

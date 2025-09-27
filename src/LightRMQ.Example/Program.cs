@@ -35,11 +35,11 @@ services.AddLightRmq(config =>
         .Queue("example.simple-message.print1")
         .BindQueue(queue: "example.simple-message.print1", toExchange: "example.exchange")
 
-        .Queue("example.simple-message.print2")
-        .BindQueue(queue: "example.simple-message.print2", toExchange: "example.exchange")
-
         .Queue("example.simple-message.print-handler")
         .BindQueue(queue: "example.simple-message.print-handler", toExchange: "amq.direct")
+
+        .Queue("example.user.registered")
+        .BindQueue(queue: "example.user.registered", toExchange: "amq.direct")
 
         .Queue("example.simple-message.print-red")
         .BindQueue(queue: "example.simple-message.print-red", toExchange: "amq.headers", options: ops => ops.WithArgs(red))
@@ -49,8 +49,8 @@ services.AddLightRmq(config =>
     );
 
     config.Serializers(serializers => serializers
-        .UseJsonSerializer(when: ctx => ctx.TargetMessageType.Namespace!.StartsWith("MyNamespace.LegacyModels"))
-        .Use<CustomJsonSerializer>().AsDefault()
+        .Use<CustomJsonSerializer>(when: ctx => ctx.TargetMessageType == typeof(UserRegisteredEvent))
+        .UseJsonSerializer().AsDefault()
     );
 
     config.Handlers(handlers => handlers
@@ -66,17 +66,6 @@ services.AddLightRmq(config =>
                 await ctx.Acknowledge();
             }, 
             ops => ops.FromQueue("example.simple-message.print1").WithAutoAck(false)
-        )
-
-        .Register<SimpleMessage>(
-            async (msg, ctx, ct) =>
-            {
-                await Task.Delay(10, ct);
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"Received from queue: {ctx.ContextArgs.Queue}, msg: {msg.Text}");
-                Console.ResetColor();
-            },
-            ops => ops.FromQueue("example.simple-message.print2")
         )
 
         .Register<SimpleMessage>(

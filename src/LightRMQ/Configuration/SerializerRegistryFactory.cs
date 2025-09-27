@@ -38,7 +38,7 @@ internal class SerializerRegistryFactory(IServiceProvider serviceProvider, Light
             throw new InvalidOperationException("Serializer type is null. Please register a serializer before.");
 
         return _serviceProvider.GetService(registration.SerializerType) is not IRabbitMqMessageSerializer serializer
-            ? throw new InvalidOperationException($"Unable to resolve serializer of type {registration.SerializerType.Name}. Please ensure the serializer is registered in the service collection.")
+            ? throw new InvalidOperationException($"Unable to resolve serializer of type {registration.SerializerType.Name}. Please ensure the serializer is registered in the configuration.")
             : serializer;
     }
 }
