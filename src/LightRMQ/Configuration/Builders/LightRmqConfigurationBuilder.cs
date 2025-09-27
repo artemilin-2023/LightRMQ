@@ -11,7 +11,10 @@ internal class LightRmqConfigurationBuilder :
     private readonly IConsumerConfigurationBuilder _consumerConfiguratoinBuilder;
     private string? _connectionString;
 
-    public LightRmqConfigurationBuilder(ITopologyConfigurationBuilder topologyConfigurationBuilder, ISerializerConfigurationBuilder serializerConfigurationBuilder, IConsumerConfigurationBuilder consumerConfiguratonBuilder)
+    public LightRmqConfigurationBuilder(
+        ITopologyConfigurationBuilder topologyConfigurationBuilder, 
+        ISerializerConfigurationBuilder serializerConfigurationBuilder, 
+        IConsumerConfigurationBuilder consumerConfiguratonBuilder)
     {
         _topologyConfigurationBuilder = topologyConfigurationBuilder;
         _serializerConfigurationBuilder = serializerConfigurationBuilder;

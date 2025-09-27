@@ -13,7 +13,7 @@ public class ConsumerRegistration
     internal string Queue 
     { 
         get => _queue ?? throw new InvalidOperationException(); 
-        private set => _queue = value ?? throw new ArgumentNullException(nameof(value)); 
+        set => _queue = value ?? throw new ArgumentNullException(nameof(value)); 
     }
     
     internal Handler<object> Handler 
@@ -23,6 +23,10 @@ public class ConsumerRegistration
     }
 
     internal bool AutoAck { get; set; } = true;
+
+    internal Type? HandlerType { get; set; }
+
+    internal bool HandlerIsLambda => HandlerType is null;
 
     private Type? _messageType;
     private string? _queue;

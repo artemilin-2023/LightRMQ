@@ -27,6 +27,8 @@ var green = new Dictionary<string, object?>
 
 services.AddLightRmq(config =>
 {
+    config.ConnectionString(builder.Configuration.GetConnectionString("rmq")!);
+
     config.Topology(topology => topology
         .Exchange("example.exchange", ExchangeType.Fanout)
 
@@ -36,6 +38,9 @@ services.AddLightRmq(config =>
         .Queue("example.simple-message.print2")
         .BindQueue(queue: "example.simple-message.print2", toExchange: "example.exchange")
 
+        .Queue("example.simple-message.print-handler")
+        .BindQueue(queue: "example.simple-message.print-handler", toExchange: "amq.direct")
+
         .Queue("example.simple-message.print-red")
         .BindQueue(queue: "example.simple-message.print-red", toExchange: "amq.headers", options: ops => ops.WithArgs(red))
 
@@ -43,14 +48,14 @@ services.AddLightRmq(config =>
         .BindQueue(queue: "example.simple-message.print-green", toExchange: "amq.headers", options: ops => ops.WithArgs(green))
     );
 
-    config.ConnectionString(builder.Configuration.GetConnectionString("rmq")!);
-
     config.Serializers(serializers => serializers
         .UseJsonSerializer(when: ctx => ctx.TargetMessageType.Namespace!.StartsWith("MyNamespace.LegacyModels"))
         .Use<CustomJsonSerializer>().AsDefault()
     );
 
     config.Handlers(handlers => handlers
+
+        .LoadFrom(typeof(Program).Assembly)
         
         .Register(
             async (SimpleMessage msg, ReceivedMessageContext ctx, CancellationToken ct) =>

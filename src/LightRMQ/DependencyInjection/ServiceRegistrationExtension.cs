@@ -33,7 +33,7 @@ public static class ServiceRegistrationExtension
     {
         var topologyBuilder = new TopologyConfigurationBuilder();
         var serializerBuilder = new SerializerConfigurationBuilder(services);
-        var consumerBuilder = new ConsumerConfigurationBuilder();
+        var consumerBuilder = new ConsumerConfigurationBuilder(services);
 
         var builder = new LightRmqConfigurationBuilder(topologyBuilder, serializerBuilder, consumerBuilder);
         configure(builder);

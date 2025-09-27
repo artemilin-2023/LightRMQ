@@ -3,6 +3,7 @@ using LightRMQ.Connection.Abstractions;
 using LightRMQ.Consumers.Abstractions;
 using LightRMQ.Core;
 using LightRMQ.Serialization.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -10,12 +11,13 @@ using System.Runtime.Serialization;
 
 namespace LightRMQ.Consumers;
 
-internal class Consumer(IChannelPool channelPool, ISerializerRegistry serializerRegistry, ILogger<Consumer> logger) :
+internal class Consumer(IChannelPool channelPool, ISerializerRegistry serializerRegistry, ILogger<Consumer> logger, IServiceProvider serviceProvider) :
     IConsumer
 {
     private readonly IChannelPool _channelPool = channelPool;
     private IChannel? _currentChannel;
     private readonly ISerializerRegistry _serializerRegistry = serializerRegistry;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly ILogger<Consumer> _logger = logger;
 
     public async Task<string> StartConsumingAsync<TMessage>(ConsumerRegistration consumerParams, CancellationToken cancellationToken)
@@ -62,7 +64,7 @@ internal class Consumer(IChannelPool channelPool, ISerializerRegistry serializer
         var serializer = _serializerRegistry.GetByContextOrDefault(context.ContextArgs);
 
         var payload = args.Body.ToArray();
-        var handler = consumerParams.Handler; 
+        var handler = GetHandler<TMessage>(consumerParams);
         try
         {
             var message = serializer.Deserialize<TMessage>(payload) 
@@ -75,5 +77,20 @@ internal class Consumer(IChannelPool channelPool, ISerializerRegistry serializer
             _logger.LogError(ex, "Error while processing message of type {MessageType}", typeof(TMessage).Name);
             throw;
         }
+    }
+
+    private Handler<object> GetHandler<TMessage>(ConsumerRegistration consumerParams)
+    {
+        if (consumerParams.HandlerIsLambda)
+            return consumerParams.Handler;
+
+        return async (object message, ReceivedMessageContext context, CancellationToken cancellationToken) =>
+        {
+            using var scope = _serviceProvider.CreateAsyncScope();
+            var handler = scope.ServiceProvider.GetRequiredService(consumerParams.HandlerType!) as IMessageHandler<TMessage>
+                ?? throw new InvalidOperationException("Failed to get handler.");
+
+            await handler.HandleAsync((TMessage)message, context, cancellationToken);
+        };
     }
 }
