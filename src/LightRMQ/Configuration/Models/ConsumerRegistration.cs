@@ -28,7 +28,7 @@ public class ConsumerRegistration
     private string? _queue;
     private Handler<object>? _handler;
 
-    public ConsumerRegistration WithQueue(string queue)
+    public ConsumerRegistration FromQueue(string queue)
     {
         Queue = queue;
         return this;

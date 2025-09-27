@@ -10,14 +10,14 @@ public class CustomJsonSerializer(ILogger<CustomJsonSerializer> logger) : IRabbi
 
     public TObject Deserialize<TObject>(byte[] data)
     {
-        logger.LogInformation("Using custom json serializer!");
+        //logger.LogInformation("Using custom json serializer!");
 
         return JsonSerializer.Deserialize<TObject>(data) ?? throw new InvalidOperationException("Deserialization failed.");
     }
 
     public byte[] Serialize<TObject>(TObject obj)
     {
-        logger.LogInformation("Using custom json serializer!");
+        //logger.LogInformation("Using custom json serializer!");
         
         return JsonSerializer.SerializeToUtf8Bytes(obj);
     }

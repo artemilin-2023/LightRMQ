@@ -20,7 +20,7 @@ internal class RabbitMqClient(IChannelPool channelPool, ISerializerRegistry seri
         var opts = new PublishOptions();
         options?.Invoke(opts);
 
-        var channel = await _channelPool.AcquireProducerChannelAsync(cancellationToken);
+        var channel = await _channelPool.AcquireChannelAsync(cancellationToken);
         try
         {
             await PublishAsync(message, channel, opts, cancellationToken);
@@ -32,7 +32,7 @@ internal class RabbitMqClient(IChannelPool channelPool, ISerializerRegistry seri
         }
         finally
         {
-            await _channelPool.ReturnProducerChannelAsync(channel);
+            await _channelPool.ReturnChannelAsync(channel);
         }
     }
 

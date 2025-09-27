@@ -14,13 +14,13 @@ internal class SerializerRegistry(ILogger<SerializerRegistry> logger) :
         set => _defualtSerializer ??= value;
     }
 
-    private readonly List<(Predicate<ReceivedMessageContext> predicate, IRabbitMqMessageSerializer serializer)> _serializers = [];
+    private readonly List<(Predicate<ContextArgs> predicate, IRabbitMqMessageSerializer serializer)> _serializers = [];
     private readonly ConcurrentDictionary<Type, IRabbitMqMessageSerializer> _messageTypeSerializersCache = [];
     private readonly ConcurrentDictionary<Type, IRabbitMqMessageSerializer> _serializersTypeCache = [];
     private IRabbitMqMessageSerializer? _defualtSerializer;
     private readonly ILogger<SerializerRegistry> _logger = logger;
 
-    public IRabbitMqMessageSerializer GetByContextOrDefault(ReceivedMessageContext context)
+    public IRabbitMqMessageSerializer GetByContextOrDefault(ContextArgs context)
     {
         ArgumentNullException.ThrowIfNull(context, nameof(context));
 
@@ -47,7 +47,7 @@ internal class SerializerRegistry(ILogger<SerializerRegistry> logger) :
         return _defualtSerializer ?? throw new Exception("No serializer found for the given context. Ensure that serializers are configured or set a default one.");
     }
 
-    public void RegisterSerializer(IRabbitMqMessageSerializer serializer, Predicate<ReceivedMessageContext> predicate)
+    public void RegisterSerializer(IRabbitMqMessageSerializer serializer, Predicate<ContextArgs> predicate)
     {
         ArgumentNullException.ThrowIfNull(serializer, nameof(serializer));
         ArgumentNullException.ThrowIfNull(predicate, nameof(predicate));

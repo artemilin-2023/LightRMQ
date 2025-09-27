@@ -17,7 +17,7 @@ internal class TopologyManager(LightRmqConfiguration configuration, ILogger<Topo
 
     public async Task EnsureTopologyAsync(CancellationToken cancellationToken)
     {
-        var channel = await _channelPool.AcquireProducerChannelAsync(cancellationToken);
+        var channel = await _channelPool.AcquireChannelAsync(cancellationToken);
 
         try
         {
@@ -34,7 +34,7 @@ internal class TopologyManager(LightRmqConfiguration configuration, ILogger<Topo
         }
         finally
         {
-            await _channelPool.ReturnProducerChannelAsync(channel);
+            await _channelPool.ReturnChannelAsync(channel);
         }
     }
 

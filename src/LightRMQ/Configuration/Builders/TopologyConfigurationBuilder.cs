@@ -43,7 +43,7 @@ internal sealed class TopologyConfigurationBuilder :
         return this;
     }
 
-    internal TopologyConfiguration Build()
+    public TopologyConfiguration Build()
     {
         var configuration = new TopologyConfiguration
         {

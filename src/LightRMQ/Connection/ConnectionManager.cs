@@ -20,7 +20,7 @@ internal class ConnectionManager(LightRmqConfiguration configuration, ILogger<Co
     {
         try
         {
-            return await GetOrCreateConnectionProccessAsync(cancellationToken);
+            return await GetOrCreateConnectionInnerAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -29,7 +29,7 @@ internal class ConnectionManager(LightRmqConfiguration configuration, ILogger<Co
         }
     }
 
-    private async Task<IConnection> GetOrCreateConnectionProccessAsync(CancellationToken cancellationToken)
+    private async Task<IConnection> GetOrCreateConnectionInnerAsync(CancellationToken cancellationToken)
     {
         using (await _locker.LockAsync(cancellationToken: cancellationToken))
         {

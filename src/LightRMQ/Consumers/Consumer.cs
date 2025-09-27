@@ -1,5 +1,6 @@
 ﻿using LightRMQ.Configuration.Models;
 using LightRMQ.Connection.Abstractions;
+using LightRMQ.Consumers.Abstractions;
 using LightRMQ.Core;
 using LightRMQ.Serialization.Abstractions;
 using Microsoft.Extensions.Logging;
@@ -9,25 +10,30 @@ using System.Runtime.Serialization;
 
 namespace LightRMQ.Consumers;
 
-internal class Consumer(IChannelPool channelPool, ISerializerRegistry serializerRegistry, ILogger<Consumer> logger)
+internal class Consumer(IChannelPool channelPool, ISerializerRegistry serializerRegistry, ILogger<Consumer> logger) :
+    IConsumer
 {
     private readonly IChannelPool _channelPool = channelPool;
+    private IChannel? _currentChannel;
     private readonly ISerializerRegistry _serializerRegistry = serializerRegistry;
     private readonly ILogger<Consumer> _logger = logger;
 
-    public async Task StartConsumingAsync<TMessage>(ConsumerRegistration consumerParams, CancellationToken cancellationToken)
+    public async Task<string> StartConsumingAsync<TMessage>(ConsumerRegistration consumerParams, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting consuming messages of type {MessageType} form queue '{Queue}'", 
+        _logger.LogInformation("Starting consuming messages of type {MessageType} from queue '{Queue}'", 
             typeof(TMessage).Name, consumerParams.Queue);
 
-        var channel = await _channelPool.GetConsumerChannelAsync(cancellationToken);
+        _currentChannel = await _channelPool.AcquireChannelAsync(cancellationToken);
         try
         {
-            var consumer = new AsyncEventingBasicConsumer(channel);
+            var consumer = new AsyncEventingBasicConsumer(_currentChannel);
             consumer.ReceivedAsync += (consumingChannel, eventArgs) =>
-                OnMessageReceivedAsync<TMessage>((IChannel)consumingChannel, eventArgs, consumerParams);
+                OnMessageReceivedAsync<TMessage>(((AsyncEventingBasicConsumer)consumingChannel).Channel, eventArgs, consumerParams);
 
-            await channel.BasicConsumeAsync(consumerParams.Queue, consumerParams.AutoAck, consumer, cancellationToken);
+            var consumingTag = await _currentChannel.BasicConsumeAsync(consumerParams.Queue, consumerParams.AutoAck, consumer, cancellationToken);
+            _logger.LogInformation("Consumer started. Consumer tag is '{tag}'", consumingTag);
+
+            return consumingTag;
         }
         catch (Exception ex)
         {
@@ -38,10 +44,12 @@ internal class Consumer(IChannelPool channelPool, ISerializerRegistry serializer
 
     public async Task StopConsumingAsync(string consumingTag, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Stopping consuming messages with tag '{ConsumingTag}'", consumingTag);
+        _logger.LogInformation("Stopping message consumption with tag '{ConsumingTag}'", consumingTag);
+        if (_currentChannel is null)
+            throw new InvalidOperationException("Channel was null");
 
-        var channel = await _channelPool.GetConsumerChannelAsync(cancellationToken);
-        await channel.BasicCancelAsync(consumingTag, cancellationToken: cancellationToken);
+        await _currentChannel.BasicCancelAsync(consumingTag, cancellationToken: cancellationToken);
+        await _channelPool.ReturnChannelAsync(_currentChannel);
     }
 
     private async Task OnMessageReceivedAsync<TMessage>(IChannel channel, BasicDeliverEventArgs args, ConsumerRegistration consumerParams)
@@ -51,7 +59,7 @@ internal class Consumer(IChannelPool channelPool, ISerializerRegistry serializer
 
         var contextArgs = new ContextArgs(args, typeof(TMessage), consumerParams.Queue);
         var context = new ReceivedMessageContext(contextArgs, channel);
-        var serializer = _serializerRegistry.GetByContextOrDefault(context);
+        var serializer = _serializerRegistry.GetByContextOrDefault(context.ContextArgs);
 
         var payload = args.Body.ToArray();
         var handler = consumerParams.Handler; 

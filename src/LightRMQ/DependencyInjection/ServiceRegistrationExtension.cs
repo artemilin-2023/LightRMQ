@@ -4,9 +4,11 @@ using LightRMQ.Configuration.Abstractions;
 using LightRMQ.Configuration.Builders;
 using LightRMQ.Connection;
 using LightRMQ.Connection.Abstractions;
+using LightRMQ.Consumers;
 using LightRMQ.Serialization;
 using LightRMQ.Serialization.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace LightRMQ.DependencyInjection;
 
@@ -22,6 +24,7 @@ public static class ServiceRegistrationExtension
         services.AddTopology();
         services.AddSerializers();
         services.AddClients();
+        services.AddConsumers();
 
         return services;
     }
@@ -43,11 +46,23 @@ public static class ServiceRegistrationExtension
 
     private static IServiceCollection AddNetworkManagers(this IServiceCollection services)
     {
-        services.AddSingleton<ChannelPool>();
-        services.AddSingleton<IChannelPool, ChannelPool>();
+        services.AddSingleton<ChannelPool>(sp => ResolveChannelPool(sp));
+        services.AddSingleton<IChannelPool, ChannelPool>(sp => ResolveChannelPool(sp));
+
         services.AddSingleton<ConnectionManager>();
         
         return services;
+    }
+
+    private static ChannelPool ResolveChannelPool(IServiceProvider sp)
+    {
+        if (ChannelPool.HasInstance)
+            return ChannelPool.Instance;
+
+        var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger<ChannelPool>();
+        var connectionManager = sp.GetRequiredService<ConnectionManager>();
+
+        return ChannelPool.InitializeAsync(connectionManager, logger).GetAwaiter().GetResult();
     }
 
     private static IServiceCollection AddTopology(this IServiceCollection services)
@@ -73,6 +88,14 @@ public static class ServiceRegistrationExtension
     private static IServiceCollection AddClients(this IServiceCollection services)
     {
         services.AddTransient<IRabbitMqClient, RabbitMqClient>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddConsumers(this IServiceCollection services)
+    {
+        services.AddHostedService<ConsumersHost>();
+        services.AddTransient<Consumer>();
 
         return services;
     }
