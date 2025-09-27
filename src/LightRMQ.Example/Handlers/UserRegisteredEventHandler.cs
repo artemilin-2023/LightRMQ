@@ -19,13 +19,19 @@ public class UserRegisteredEventHandler : IMessageHandler<UserRegisteredEvent>
     {
         _logger.LogInformation("User with name {name} and age {age} registered", message.Name, message.Age);
 
-        await _publisher.PublishAsync(
-            new SimpleMessage()
-            {
-                Text = $"Hello, {message.Name}!"
-            },
-            cancellationToken,
-            ops => ops.WithExchange("example.exchange")
+        var msg = new SimpleMessage()
+        {
+            Text = $"Hello, {message.Name}!"
+        };
+
+        var color = message.Age % 2 == 0 
+            ? "red" 
+            : "green";
+
+        await _publisher.PublishAsync(msg, cancellationToken,
+            ops => ops
+                .WithExchange("amq.headers")
+                .WithHeader("color", color)
         );
     }
 }

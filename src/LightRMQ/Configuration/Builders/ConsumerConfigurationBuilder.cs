@@ -26,6 +26,9 @@ public class ConsumerConfigurationBuilder(IServiceCollection services) :
         return this;
     }
 
+    public IConsumerConfigurationBuilder LoadFromAssemblyContains<TMarker>()
+        => LoadFrom(typeof(TMarker).Assembly);
+
     public IConsumerConfigurationBuilder LoadFrom(Assembly assembly)
     {
         var handlers = assembly.GetTypes()

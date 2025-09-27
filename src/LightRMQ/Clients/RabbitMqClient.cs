@@ -45,7 +45,8 @@ internal class RabbitMqClient(IChannelPool channelPool, ISerializerRegistry seri
         {
             ContentType = serializer.ContentType,
             ContentEncoding = serializer.ContentEncoding,
-            Priority = options.Priority
+            Priority = options.Priority,
+            Headers = options.Headers
         };
 
         await channel.BasicPublishAsync(

@@ -6,6 +6,7 @@ public class PublishOptions
     internal string Exchange { get; private set; } = "amq.direct";
     internal byte Priority { get; private set; } = 0;
     internal Type? SerializerType { get; private set; }
+    internal Dictionary<string, object?>? Headers { get; private set; }
 
     public PublishOptions WithRoutingKey(string routingKey)
     {
@@ -33,6 +34,14 @@ public class PublishOptions
         where TSerializer : class, IRabbitMqMessageSerializer
     {
         SerializerType = typeof(TSerializer);
+        return this;
+    }
+
+    public PublishOptions WithHeader(string key, object? value)
+    {
+        Headers ??= [];
+        Headers.Add(key, value);
+
         return this;
     }
 }

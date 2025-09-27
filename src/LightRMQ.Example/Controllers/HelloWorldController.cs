@@ -20,7 +20,8 @@ public class HelloWorldController(IRabbitMqClient rabbitMqClient) : Controller
 
         await _rabbitMqClient.PublishAsync(message, CancellationToken.None,
             options => options
-                .WithExchange("example.exchange")
+                .WithExchange("")
+                .WithRoutingKey("example.simple-message.print-handler")
                 .WithSerializer<CustomJsonSerializer>()
         );
 
