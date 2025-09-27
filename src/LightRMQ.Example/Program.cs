@@ -30,6 +30,8 @@ services.AddLightRmq(config =>
     config.ConnectionString(builder.Configuration.GetConnectionString("rmq")!);
 
     config.Topology(topology => topology
+        .Exchange("my.exchange", ExchangeType.Topic)
+        
         .Queue("example.simple-message.print-handler")
         .BindQueue(queue: "example.simple-message.print-handler", toExchange: "amq.direct")
 
