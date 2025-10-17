@@ -1,0 +1,70 @@
+﻿namespace LightRMQ.Common;
+
+internal sealed class AsyncLocker : IAsyncDisposable
+{
+    private readonly SemaphoreSlim _semaphore;
+    private bool _disposed;
+
+    public AsyncLocker(int initialCount = 1, int maxCount = 1)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(initialCount, nameof(initialCount));
+
+        if (maxCount < 1 || initialCount > maxCount)
+            throw new ArgumentOutOfRangeException(nameof(maxCount));
+
+        _semaphore = new SemaphoreSlim(initialCount, maxCount);
+    }
+
+    public async Task<Releaser> LockAsync(
+        TimeSpan? timeout = null,
+        CancellationToken cancellationToken = default)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        if (timeout.HasValue)
+        {
+            await _semaphore.WaitAsync(timeout.Value, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        return new Releaser(this);
+    }
+
+    private void Release()
+        => _semaphore.Release();
+
+    public ValueTask DisposeAsync()
+    {
+        if (_disposed) return ValueTask.CompletedTask;
+
+        _disposed = true;
+        _semaphore.Dispose();
+
+        return ValueTask.CompletedTask;
+    }
+
+    public record struct Releaser : IDisposable
+    {
+        private readonly AsyncLocker _toRelease { get; init; }
+        private bool _taken { get; set; }
+
+        internal Releaser(AsyncLocker toRelease)
+        {
+            _toRelease = toRelease;
+            _taken = true;
+        }
+
+        public void Dispose()
+        {
+            if (_taken)
+            {
+                _taken = false;
+                _toRelease.Release();
+            }
+        }
+    }
+}
+
